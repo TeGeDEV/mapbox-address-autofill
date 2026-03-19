@@ -1,0 +1,19 @@
+# Зависимости
+node_modules/
+dist/
+build/
+
+# Логи и временные файлы
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+
+# Конфиги IDE
+.vscode/
+.idea/
+*.swp
+
+# Файлы операционной системы
+.DS_Store
+Thumbs.db
