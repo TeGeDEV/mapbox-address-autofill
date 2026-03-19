@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "prepare": "npm run build",
     "dev": "tsup src/index.ts --format cjs,esm --watch --dts",
     "lint": "eslint src"
   },
