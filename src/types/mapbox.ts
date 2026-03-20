@@ -120,3 +120,9 @@ export interface AutofillItem {
   suggestion: Suggestion;
   source?: "ip" | "global" | "bbox";
 }
+
+export type ApiStatus =
+  | "ok"
+  | "blocked_401"
+  | "blocked_429"
+  | "error_temporary";
