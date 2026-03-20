@@ -116,11 +116,7 @@ export interface HouseNumberSelectResult {
   parsed: ParsedAddress;
 }
 
-export interface StreetItem {
+export interface AutofillItem {
   suggestion: Suggestion;
-  source: "ip" | "global" | "bbox";
-}
-
-export interface SimpleItem {
-  suggestion: Suggestion;
+  source?: "ip" | "global" | "bbox";
 }

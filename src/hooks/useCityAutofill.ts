@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef } from "react";
 import type {
+  AutofillItem,
   SelectWithBboxResult,
-  SimpleItem,
   Suggestion,
 } from "../types/mapbox";
 import { useMapboxGeocode } from "./useMapboxGeocode";
@@ -32,7 +32,7 @@ export function useCityAutofill({
     [search, minLength, clear]
   );
 
-  const items: SimpleItem[] = useMemo(() => {
+  const items: AutofillItem[] = useMemo(() => {
     const mapped = results.map((s) => ({ suggestion: s }));
     const q = lastQueryRef.current;
     if (!q) return mapped;

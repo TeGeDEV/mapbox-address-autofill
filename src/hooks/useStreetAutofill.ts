@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type {
+  AutofillItem,
   SelectWithBboxResult,
-  StreetItem,
   Suggestion,
 } from "../types/mapbox";
 import { useMapboxGeocode } from "./useMapboxGeocode";
@@ -80,9 +80,9 @@ export function useStreetAutofill({
     [effectiveBbox, searchDual, minLength]
   );
 
-  const items: StreetItem[] = useMemo(() => {
+  const items: AutofillItem[] = useMemo(() => {
     const seen = new Set<string>();
-    const result: StreetItem[] = [];
+    const result: AutofillItem[] = [];
 
     const addSuggestions = (
       suggestions: Suggestion[],
