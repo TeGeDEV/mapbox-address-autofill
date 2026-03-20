@@ -112,10 +112,6 @@ export interface SelectWithBboxResult {
   bbox?: string;
 }
 
-export interface StreetSelectResult {
-  parsed: ParsedAddress;
-}
-
 export interface HouseNumberSelectResult {
   parsed: ParsedAddress;
 }

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type {
+  SelectWithBboxResult,
   StreetItem,
-  StreetSelectResult,
   Suggestion,
 } from "../types/mapbox";
 import { useMapboxGeocode } from "./useMapboxGeocode";
@@ -107,7 +107,7 @@ export function useStreetAutofill({
   }, [ipSuggestions, globalSuggestions, bboxSuggestions, hasContext]);
 
   const select = useCallback(
-    (suggestion: Suggestion): StreetSelectResult | null => {
+    (suggestion: Suggestion): SelectWithBboxResult | null => {
       const r = retrieve(suggestion);
       if (!r) return null;
       return { parsed: r.parsed };
