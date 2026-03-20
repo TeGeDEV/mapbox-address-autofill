@@ -13,9 +13,10 @@ export function useCityAutofill({
   accessToken: string;
   minLength?: number;
 }) {
-  const { results, isLoading, search, retrieve, clear } = useMapboxGeocode({
-    accessToken,
-  });
+  const { results, isLoading, error, search, retrieve, clear } =
+    useMapboxGeocode({
+      accessToken,
+    });
 
   const lastQueryRef = useRef("");
 
@@ -31,10 +32,6 @@ export function useCityAutofill({
     [search, minLength, clear]
   );
 
-  /**
-   * Сортировка: сначала точные prefix-совпадения (name начинается с query),
-   * потом fuzzy-совпадения (Bürg на запрос "ber")
-   */
   const items: SimpleItem[] = useMemo(() => {
     const mapped = results.map((s) => ({ suggestion: s }));
     const q = lastQueryRef.current;
@@ -66,5 +63,5 @@ export function useCityAutofill({
     [retrieve]
   );
 
-  return { items, isLoading, fetchCities, select, clear };
+  return { items, isLoading, error, fetchCities, select, clear };
 }

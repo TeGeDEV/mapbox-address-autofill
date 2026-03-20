@@ -15,9 +15,10 @@ export function usePostcodeAutofill({
   minLength?: number;
   filterCity?: string;
 }) {
-  const { results, isLoading, search, retrieve, clear } = useMapboxGeocode({
-    accessToken,
-  });
+  const { results, isLoading, error, search, retrieve, clear } =
+    useMapboxGeocode({
+      accessToken,
+    });
 
   const fetchPostcodes = useCallback(
     (query: string) => {
@@ -74,13 +75,6 @@ export function usePostcodeAutofill({
     [retrieve]
   );
 
-  /**
-   * Автовыбор PLZ при blur.
-   * Проверяет 3 условия:
-   * 1. Значение — ровно 5 цифр (валидный немецкий PLZ)
-   * 2. Такой PLZ есть в текущих items (уже загруженных, без доп. запроса)
-   * 3. Возвращает результат select (parsed + bbox) или null
-   */
   const autoSelect = useCallback(
     (value: string): SelectWithBboxResult | null => {
       if (!/^\d{5}$/.test(value)) return null;
@@ -91,5 +85,5 @@ export function usePostcodeAutofill({
     [items, select]
   );
 
-  return { items, isLoading, fetchPostcodes, select, autoSelect, clear };
+  return { items, isLoading, error, fetchPostcodes, select, autoSelect, clear };
 }

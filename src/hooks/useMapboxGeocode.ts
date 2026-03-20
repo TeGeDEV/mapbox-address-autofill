@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import type {
   GeocodeOptions,
+  MapboxError,
   MapboxFeature,
   MapboxGeocodingResponse,
   RetrieveResult,
@@ -21,6 +22,18 @@ export function useMapboxGeocode({
   const [isLoading, setIsLoading] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cache = useRef<Map<string, MapboxFeature>>(new Map());
+  const [error, setError] = useState<MapboxError | null>(null);
+
+  const parseError = useCallback(
+    (err: unknown, status?: number): MapboxError => {
+      if (status === 401)
+        return { code: 401, message: "Invalid Mapbox access token" };
+      if (status === 429)
+        return { code: 429, message: "Mapbox request limit exceeded" };
+      return { code: "unknown", message: "Unknown error" };
+    },
+    []
+  );
 
   const buildUrl = useCallback(
     (params: SearchParams) => {
@@ -42,64 +55,72 @@ export function useMapboxGeocode({
 
   const search = useCallback(
     (params: SearchParams) => {
+      if (!params.query.trim()) {
+        setError({ code: "invalid_query", message: "Query must not be empty" });
+        return;
+      }
       if (timerRef.current) clearTimeout(timerRef.current);
+      setError(null);
 
       timerRef.current = setTimeout(async () => {
         setIsLoading(true);
         try {
           const res = await fetch(buildUrl(params));
+          if (!res.ok) {
+            setError(parseError(null, res.status));
+            setResults([]);
+            return;
+          }
           const data: MapboxGeocodingResponse = await res.json();
           const features = data.features;
 
           features.forEach((f) => cache.current.set(f.id, f));
           setResults(features.map(mapFeature));
         } catch (err) {
-          console.error("Geocode error:", err);
+          setError(parseError(err));
           setResults([]);
         } finally {
           setIsLoading(false);
         }
       }, debounceMs);
     },
-    [buildUrl, debounceMs]
+    [buildUrl, debounceMs, parseError]
   );
 
   const searchSingle = useCallback(
     async (params: SearchParams): Promise<Suggestion[]> => {
+      if (!params.query.trim())
+        throw { code: "invalid_query", message: "Query must not be empty" };
       const res = await fetch(buildUrl(params));
+      if (!res.ok) throw parseError(null, res.status);
       const data: MapboxGeocodingResponse = await res.json();
       const features = data.features;
       features.forEach((f) => cache.current.set(f.id, f));
       return features.map(mapFeature);
     },
-    [buildUrl]
+    [buildUrl, parseError]
   );
 
   const searchDual = useCallback(
-    async (
-      primary: SearchParams,
-      secondary: SearchParams
-    ): Promise<{ primary: Suggestion[]; secondary: Suggestion[] }> => {
+    async (primary: SearchParams, secondary: SearchParams) => {
+      const fetchOne = async (params: SearchParams) => {
+        const res = await fetch(buildUrl(params));
+        if (!res.ok) throw parseError(null, res.status);
+        return res.json() as Promise<MapboxGeocodingResponse>;
+      };
       const [r1, r2] = await Promise.all([
-        fetch(buildUrl(primary)).then((r) =>
-          r.json()
-        ) as Promise<MapboxGeocodingResponse>,
-        fetch(buildUrl(secondary)).then((r) =>
-          r.json()
-        ) as Promise<MapboxGeocodingResponse>,
+        fetchOne(primary),
+        fetchOne(secondary),
       ]);
-
-      const f1 = r1.features;
-      const f2 = r2.features;
-
-      [...f1, ...f2].forEach((f) => cache.current.set(f.id, f));
-
+      [...r1.features, ...r2.features].forEach((f) =>
+        cache.current.set(f.id, f)
+      );
       return {
-        primary: f1.map(mapFeature),
-        secondary: f2.map(mapFeature),
+        primary: r1.features.map(mapFeature),
+        secondary: r2.features.map(mapFeature),
       };
     },
-    [buildUrl]
+    [buildUrl, parseError]
   );
 
   const retrieve = useCallback(
@@ -116,6 +137,7 @@ export function useMapboxGeocode({
   return {
     results,
     isLoading,
+    error,
     search,
     searchSingle,
     searchDual,

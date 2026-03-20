@@ -20,13 +20,12 @@ export function useStreetAutofill({
   const {
     isLoading,
     searchDual,
+    error,
     retrieve,
     clear: baseClear,
   } = useMapboxGeocode({ accessToken });
 
-  // Улицы со всей Германии (без bbox) → для "Nur Straßenname"
   const [globalSuggestions, setGlobalSuggestions] = useState<Suggestion[]>([]);
-  // Улицы внутри bbox → для "Vollständige Adresse"
   const [bboxSuggestions, setBboxSuggestions] = useState<Suggestion[]>([]);
   const [ipSuggestions, setIpSuggestions] = useState<Suggestion[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -58,17 +57,9 @@ export function useStreetAutofill({
               },
               { query, types: "address", limit: 5 }
             );
-            // primary = без bbox → глобальные улицы
-            // secondary = с bbox → локальные улицы
             setGlobalSuggestions(secondary);
             setBboxSuggestions(primary);
           } else {
-            // const results = await searchSingle({
-            //   query,
-            //   types: "address",
-            //   limit: 10,
-            //   minLength,
-            // });
             const { primary, secondary } = await searchDual(
               { query, types: "address", limit: 5, proximity: "ip" },
               { query, types: "address", limit: 5 }
@@ -105,11 +96,9 @@ export function useStreetAutofill({
     };
 
     if (hasContext) {
-      // С контекстом — сначала совпадающие с bbox
       addSuggestions(bboxSuggestions, "bbox");
       addSuggestions(globalSuggestions, "global");
     } else {
-      // Без контекста — ip первыми, global в конце
       addSuggestions(ipSuggestions, "ip");
       addSuggestions(globalSuggestions, "global");
     }
@@ -137,6 +126,7 @@ export function useStreetAutofill({
     items,
     hasContext,
     isLoading: loading || isLoading,
+    error,
     fetchStreets,
     select,
     clear,

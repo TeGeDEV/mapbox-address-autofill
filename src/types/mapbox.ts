@@ -72,6 +72,13 @@ export interface Suggestion {
   place_formatted: string;
 }
 
+export type MapboxErrorCode = 401 | 429 | "invalid_query" | "unknown";
+
+export interface MapboxError {
+  code: MapboxErrorCode;
+  message: string;
+}
+
 export interface ParsedAddress {
   street: string;
   houseNumber: string;
