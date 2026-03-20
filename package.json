@@ -1,6 +1,6 @@
 {
   "name": "@tegedev/mapbox-address-autofill",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Custom Mapbox address autofill hooks",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
