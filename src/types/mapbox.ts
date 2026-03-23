@@ -7,70 +7,7 @@ export type MapboxPlaceType =
   | "district"
   | "country";
 
-export type ContextPrefix =
-  | "postcode"
-  | "locality"
-  | "place"
-  | "district"
-  | "region"
-  | "country";
-
-export interface MapboxContext {
-  id: string;
-  mapbox_id: string;
-  text: string;
-  language?: string;
-  text_de?: string;
-  language_de?: string;
-  wikidata?: string;
-  short_code?: string;
-}
-
-export interface MapboxFeatureProperties {
-  accuracy?: string;
-  mapbox_id?: string;
-  wikidata?: string;
-}
-
-export interface MapboxGeometry {
-  type: "Point";
-  coordinates: [number, number];
-}
-
-export interface MapboxFeature {
-  id: string;
-  type: "Feature";
-  place_type: MapboxPlaceType[];
-  relevance: number;
-  properties: MapboxFeatureProperties;
-  text: string;
-  text_de?: string;
-  language?: string;
-  language_de?: string;
-  place_name: string;
-  place_name_de?: string;
-  matching_text?: string;
-  matching_place_name?: string;
-  address?: string;
-  center: [number, number];
-  bbox?: [number, number, number, number];
-  geometry: MapboxGeometry;
-  context: MapboxContext[];
-}
-
-export interface MapboxGeocodingResponse {
-  type: "FeatureCollection";
-  query: string[];
-  features: MapboxFeature[];
-  attribution: string;
-}
-
-export interface Suggestion {
-  mapbox_id: string;
-  name: string;
-  full_address: string;
-  place_formatted: string;
-}
+export type ContextPrefix = keyof MapboxContext;
 
 export type MapboxErrorCode = 401 | 429 | "invalid_query" | "unknown";
 
@@ -112,10 +49,6 @@ export interface SelectWithBboxResult {
   bbox?: string;
 }
 
-export interface HouseNumberSelectResult {
-  parsed: ParsedAddress;
-}
-
 export interface AutofillItem {
   suggestion: Suggestion;
   source?: "ip" | "global" | "bbox";
@@ -126,3 +59,77 @@ export type ApiStatus =
   | "blocked_401"
   | "blocked_429"
   | "error_temporary";
+
+// new Geocoding types v6
+//--------------------------------------------
+export interface Translation {
+  language: string;
+  name: string;
+}
+
+export interface Translations {
+  [langCode: string]: Translation;
+}
+
+export interface Coordinates {
+  longitude: number;
+  latitude: number;
+}
+
+export interface MapboxContextItem {
+  mapbox_id: string;
+  name: string;
+  wikidata_id?: string;
+  region_code?: string;
+  region_code_full?: string;
+  country_code?: string;
+  country_code_alpha_3?: string;
+  translations?: Translations;
+}
+
+export interface MapboxContext {
+  country?: MapboxContextItem;
+  locality?: MapboxContextItem;
+  place?: MapboxContextItem;
+  postcode?: Pick<MapboxContextItem, "mapbox_id" | "name">;
+  region?: MapboxContextItem;
+  district?: MapboxContextItem;
+  street?: MapboxContextItem;
+}
+
+export interface MapboxFeatureProperties {
+  bbox?: [number, number, number, number];
+  context: MapboxContext;
+  coordinates: Coordinates;
+  feature_type: string;
+  full_address: string;
+  mapbox_id: string;
+  name: string;
+  name_preferred: string;
+  place_formatted: string;
+}
+
+export interface MapboxGeometry {
+  type: "Point";
+  coordinates: [number, number];
+}
+
+export interface MapboxFeature {
+  type: "Feature";
+  id: string;
+  geometry: MapboxGeometry;
+  properties: MapboxFeatureProperties;
+}
+
+export interface MapboxFeatureCollection {
+  type: "FeatureCollection";
+  features: MapboxFeature[];
+  attribution: string;
+}
+
+export interface Suggestion {
+  mapbox_id: string;
+  name: string;
+  full_address: string;
+  place_formatted: string;
+}

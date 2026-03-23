@@ -1,17 +1,17 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   ApiStatus,
   GeocodeOptions,
   MapboxError,
   MapboxFeature,
-  MapboxGeocodingResponse,
+  MapboxFeatureCollection,
   RetrieveResult,
   SearchParams,
   Suggestion,
 } from "../types/mapbox";
 import { mapFeature, parseAddress } from "../utils/mapbox";
 
-const BASE = "https://api.mapbox.com/geocoding/v5/mapbox.places";
+const BASE_V6 = "https://api.mapbox.com/search/geocode/v6/forward";
 
 export function useMapboxGeocode({
   accessToken,
@@ -59,16 +59,17 @@ export function useMapboxGeocode({
   const buildUrl = useCallback(
     (params: SearchParams) => {
       const urlParams = new URLSearchParams({
-        access_token: accessToken,
-        autocomplete: "true",
-        language,
+        q: params.query,
         country,
         types: params.types,
+        language,
+        access_token: accessToken,
+        autocomplete: "true",
         limit: String(params.limit ?? 10),
       });
       if (params.proximity === "ip") urlParams.set("proximity", "ip");
       if (params.bbox) urlParams.set("bbox", params.bbox);
-      return `${BASE}/${encodeURIComponent(params.query)}.json?${urlParams}`;
+      return `${BASE_V6}?${urlParams}`;
     },
     [accessToken, country, language]
   );
@@ -93,7 +94,7 @@ export function useMapboxGeocode({
             setResults([]);
             return;
           }
-          const data: MapboxGeocodingResponse = await res.json();
+          const data: MapboxFeatureCollection = await res.json();
           const features = data.features;
           features.forEach((f) => cache.current.set(f.id, f));
           setResults(features.map(mapFeature));
@@ -109,53 +110,46 @@ export function useMapboxGeocode({
     [buildUrl, debounceMs, parseError, handleErrorStatus, apiStatus]
   );
 
-  const searchSingle = useCallback(
-    async (params: SearchParams): Promise<Suggestion[]> => {
-      if (apiStatus !== "ok") return [];
-      if (!params.query.trim())
-        throw { code: "invalid_query", message: "Query must not be empty" };
-      const res = await fetch(buildUrl(params));
-      if (!res.ok) {
-        handleErrorStatus(res.status);
-        throw parseError(null, res.status);
-      }
-      const data: MapboxGeocodingResponse = await res.json();
-      const features = data.features;
-      features.forEach((f) => cache.current.set(f.id, f));
-      return features.map(mapFeature);
-    },
-    [buildUrl, parseError, handleErrorStatus, apiStatus]
-  );
-
   const searchDual = useCallback(
-    async (
+    (
       primary: SearchParams,
       secondary: SearchParams
     ): Promise<{ primary: Suggestion[]; secondary: Suggestion[] }> => {
-      if (apiStatus !== "ok") return { primary: [], secondary: [] };
+      return new Promise((resolve, reject) => {
+        if (timerRef.current) clearTimeout(timerRef.current);
 
-      const fetchOne = async (params: SearchParams) => {
-        const res = await fetch(buildUrl(params));
-        if (!res.ok) {
-          handleErrorStatus(res.status);
-          throw parseError(null, res.status);
-        }
-        return res.json() as Promise<MapboxGeocodingResponse>;
-      };
+        timerRef.current = setTimeout(async () => {
+          if (apiStatus !== "ok")
+            return resolve({ primary: [], secondary: [] });
 
-      const [r1, r2] = await Promise.all([
-        fetchOne(primary),
-        fetchOne(secondary),
-      ]);
-      [...r1.features, ...r2.features].forEach((f) =>
-        cache.current.set(f.id, f)
-      );
-      return {
-        primary: r1.features.map(mapFeature),
-        secondary: r2.features.map(mapFeature),
-      };
+          const fetchOne = async (params: SearchParams) => {
+            const res = await fetch(buildUrl(params));
+            if (!res.ok) {
+              handleErrorStatus(res.status);
+              throw parseError(null, res.status);
+            }
+            return res.json() as Promise<MapboxFeatureCollection>;
+          };
+
+          try {
+            const [r1, r2] = await Promise.all([
+              fetchOne(primary),
+              fetchOne(secondary),
+            ]);
+            [...r1.features, ...r2.features].forEach((f) =>
+              cache.current.set(f.id, f)
+            );
+            resolve({
+              primary: r1.features.map(mapFeature),
+              secondary: r2.features.map(mapFeature),
+            });
+          } catch (err) {
+            reject(err);
+          }
+        }, debounceMs);
+      });
     },
-    [buildUrl, parseError, handleErrorStatus, apiStatus]
+    [buildUrl, parseError, handleErrorStatus, apiStatus, debounceMs]
   );
 
   const retrieve = useCallback(
@@ -169,13 +163,19 @@ export function useMapboxGeocode({
 
   const clear = useCallback(() => setResults([]), []);
 
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    };
+  }, []);
+
   return {
     results,
     isLoading,
     error,
     apiStatus,
     search,
-    searchSingle,
     searchDual,
     retrieve,
     clear,

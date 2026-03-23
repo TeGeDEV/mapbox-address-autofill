@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type {
   AutofillItem,
   SelectWithBboxResult,
@@ -28,54 +28,48 @@ export function useStreetAutofill({
   const [globalSuggestions, setGlobalSuggestions] = useState<Suggestion[]>([]);
   const [bboxSuggestions, setBboxSuggestions] = useState<Suggestion[]>([]);
   const [ipSuggestions, setIpSuggestions] = useState<Suggestion[]>([]);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [loading, setLoading] = useState(false);
 
   const hasContext = !!bbox?.trim();
   const effectiveBbox = hasContext ? bbox : undefined;
 
   const fetchStreets = useCallback(
-    (query: string) => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+    async (query: string) => {
       if (query.length < minLength) {
         setGlobalSuggestions([]);
         setBboxSuggestions([]);
+        setIpSuggestions([]);
         return;
       }
 
-      timerRef.current = setTimeout(async () => {
-        setLoading(true);
-        try {
-          if (effectiveBbox) {
-            const { primary, secondary } = await searchDual(
-              {
-                query,
-                types: "address",
-                limit: 5,
-                bbox: effectiveBbox,
-                proximity: "ip",
-              },
-              { query, types: "address", limit: 5 }
-            );
-            setGlobalSuggestions(secondary);
-            setBboxSuggestions(primary);
-          } else {
-            const { primary, secondary } = await searchDual(
-              { query, types: "address", limit: 5, proximity: "ip" },
-              { query, types: "address", limit: 5 }
-            );
-            setIpSuggestions(primary);
-            setGlobalSuggestions(secondary);
-            setBboxSuggestions([]);
-          }
-        } catch {
-          setGlobalSuggestions([]);
-          setBboxSuggestions([]);
+      try {
+        if (effectiveBbox) {
+          const { primary, secondary } = await searchDual(
+            {
+              query,
+              types: "street",
+              limit: 5,
+              bbox: effectiveBbox,
+              proximity: "ip",
+            },
+            { query, types: "street", limit: 5 }
+          );
+          setBboxSuggestions(primary);
+          setGlobalSuggestions(secondary);
           setIpSuggestions([]);
-        } finally {
-          setLoading(false);
+        } else {
+          const { primary, secondary } = await searchDual(
+            { query, types: "street", limit: 5, proximity: "ip" },
+            { query, types: "street", limit: 5 }
+          );
+          setIpSuggestions(primary);
+          setGlobalSuggestions(secondary);
+          setBboxSuggestions([]);
         }
-      }, 300);
+      } catch {
+        setGlobalSuggestions([]);
+        setBboxSuggestions([]);
+        setIpSuggestions([]);
+      }
     },
     [effectiveBbox, searchDual, minLength]
   );
@@ -125,7 +119,7 @@ export function useStreetAutofill({
   return {
     items,
     hasContext,
-    isLoading: loading || isLoading,
+    isLoading,
     error,
     fetchStreets,
     select,

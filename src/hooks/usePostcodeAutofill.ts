@@ -63,11 +63,8 @@ export function usePostcodeAutofill({
       if (!r) return null;
 
       let bbox: string | undefined;
-      if (r.feature.bbox) {
-        bbox = r.feature.bbox.join(",");
-      } else if (r.feature.center) {
-        const [lng, lat] = r.feature.center;
-        bbox = `${lng - 0.05},${lat - 0.05},${lng + 0.05},${lat + 0.05}`;
+      if (r.feature.properties.bbox) {
+        bbox = r.feature.properties.bbox.join(",");
       }
 
       return { parsed: r.parsed, bbox };
