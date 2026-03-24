@@ -104,7 +104,13 @@ export function useStreetAutofill({
     (suggestion: Suggestion): SelectWithBboxResult | null => {
       const r = retrieve(suggestion);
       if (!r) return null;
-      return { parsed: r.parsed };
+
+      let bbox: string | undefined;
+      if (r.feature.properties.bbox) {
+        bbox = r.feature.properties.bbox.join(",");
+      }
+
+      return { parsed: r.parsed, bbox };
     },
     [retrieve]
   );
