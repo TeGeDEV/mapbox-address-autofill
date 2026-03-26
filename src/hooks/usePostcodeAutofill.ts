@@ -6,18 +6,23 @@ import type {
 } from "../types/mapbox";
 import { useMapboxGeocode } from "./useMapboxGeocode";
 
+interface PostcodeAutofillOptions {
+  accessToken: string;
+  minLength?: number;
+  filterCity?: string;
+  country?: string;
+}
+
 export function usePostcodeAutofill({
   accessToken,
   minLength = 2,
   filterCity,
-}: {
-  accessToken: string;
-  minLength?: number;
-  filterCity?: string;
-}) {
+  country = "de",
+}: PostcodeAutofillOptions) {
   const { results, isLoading, error, search, retrieve, clear } =
     useMapboxGeocode({
       accessToken,
+      country,
     });
 
   const fetchPostcodes = useCallback(

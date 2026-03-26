@@ -9,13 +9,16 @@ import { useMapboxGeocode } from "./useMapboxGeocode";
 export function useCityAutofill({
   accessToken,
   minLength = 2,
+  country = "de",
 }: {
   accessToken: string;
   minLength?: number;
+  country?: string;
 }) {
   const { results, isLoading, error, search, retrieve, clear } =
     useMapboxGeocode({
       accessToken,
+      country,
     });
 
   const lastQueryRef = useRef("");

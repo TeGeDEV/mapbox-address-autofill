@@ -10,12 +10,14 @@ interface StreetAutofillOptions {
   accessToken: string;
   bbox?: string;
   minLength?: number;
+  country?: string;
 }
 
 export function useStreetAutofill({
   accessToken,
   bbox,
   minLength = 3,
+  country = "de",
 }: StreetAutofillOptions) {
   const {
     isLoading,
@@ -23,7 +25,7 @@ export function useStreetAutofill({
     error,
     retrieve,
     clear: baseClear,
-  } = useMapboxGeocode({ accessToken });
+  } = useMapboxGeocode({ accessToken, country });
 
   const [globalSuggestions, setGlobalSuggestions] = useState<Suggestion[]>([]);
   const [bboxSuggestions, setBboxSuggestions] = useState<Suggestion[]>([]);
