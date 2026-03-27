@@ -1,9 +1,5 @@
 import type { MapboxFeature, ParsedAddress, Suggestion } from "../types/mapbox";
 
-export function stripCountry(str: string): string {
-  return str.replace(/,\s*(Deutschland|Germany)$/i, "");
-}
-
 function buildSubtitle(feature: MapboxFeature): string {
   const ctx = feature.properties.context;
   const featureType = feature.properties.feature_type;
@@ -39,7 +35,7 @@ export function parseAddress(feature: MapboxFeature): ParsedAddress {
     houseNumber,
     postcode,
     city,
-    full_address: stripCountry(feature.properties.full_address),
+    full_address: feature.properties.full_address,
   };
 }
 
@@ -47,7 +43,7 @@ export function mapFeature(f: MapboxFeature): Suggestion {
   return {
     mapbox_id: f.properties.mapbox_id,
     name: f.properties.name,
-    full_address: stripCountry(f.properties.full_address),
+    full_address: f.properties.full_address,
     place_formatted: buildSubtitle(f),
   };
 }

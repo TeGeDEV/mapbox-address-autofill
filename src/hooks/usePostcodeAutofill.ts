@@ -32,10 +32,6 @@ export function usePostcodeAutofill({
         return;
       }
 
-      if (!/^\d*$/.test(query)) {
-        clear();
-        return;
-      }
       search({ query, types: "postcode", limit: 10 });
     },
     [search, clear, minLength]
@@ -79,7 +75,7 @@ export function usePostcodeAutofill({
 
   const autoSelect = useCallback(
     (value: string): SelectWithBboxResult | null => {
-      if (!/^\d{5}$/.test(value)) return null;
+      if (items.length !== 1) return null;
       const found = items.find((i) => i.suggestion.name === value);
       if (!found) return null;
       return select(found.suggestion);
