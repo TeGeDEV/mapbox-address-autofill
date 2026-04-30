@@ -130,6 +130,7 @@ export interface MapboxFeatureCollection {
 export interface Suggestion {
   mapbox_id: string;
   name: string;
+  name_preferred: string;
   full_address: string;
   place_formatted: string;
 }

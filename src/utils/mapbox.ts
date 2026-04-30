@@ -43,6 +43,7 @@ export function mapFeature(f: MapboxFeature): Suggestion {
   return {
     mapbox_id: f.properties.mapbox_id,
     name: f.properties.name,
+    name_preferred: f.properties.name_preferred,
     full_address: f.properties.full_address,
     place_formatted: buildSubtitle(f),
   };
