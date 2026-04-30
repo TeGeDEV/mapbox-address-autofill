@@ -18,6 +18,7 @@ export interface MapboxError {
 
 export interface ParsedAddress {
   street: string;
+  alternativeStreet: string;
   houseNumber: string;
   postcode: string;
   city: string;

@@ -26,12 +26,14 @@ export function parseAddress(feature: MapboxFeature): ParsedAddress {
 
   const postcode = ctx.postcode?.name || "";
   const city = ctx.place?.name || "";
-  const street = ctx.street?.name || "";
+  const street = feature.properties.name || "";
+  const alternativeStreet = ctx.street?.name || "";
   // We don't get house number suggestions from Mapbox, so we return an empty string here.
   const houseNumber = "";
 
   return {
     street,
+    alternativeStreet,
     houseNumber,
     postcode,
     city,
