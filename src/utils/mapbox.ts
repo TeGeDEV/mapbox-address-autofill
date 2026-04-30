@@ -22,12 +22,17 @@ function buildSubtitle(feature: MapboxFeature): string {
 }
 
 export function parseAddress(feature: MapboxFeature): ParsedAddress {
-  const ctx = feature.properties.context;
+  const { context, feature_type, name, name_preferred } = feature.properties;
+  const isStreet = feature_type === "street";
 
-  const postcode = ctx.postcode?.name || "";
-  const city = ctx.place?.name || "";
-  const street = feature.properties.name || "";
-  const alternativeStreet = ctx.street?.name || "";
+  const street = isStreet
+    ? feature.properties.name
+    : context.street?.name || "";
+
+  const alternativeStreet = context.street?.name || "";
+  const postcode = context.postcode?.name || "";
+  const city = context.place?.name || "";
+
   // We don't get house number suggestions from Mapbox, so we return an empty string here.
   const houseNumber = "";
 
